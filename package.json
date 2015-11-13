@@ -1,5 +1,5 @@
 {
-  "name": "adrenaline",
+  "name": "@bronto/adrenaline",
   "version": "0.11.1",
   "description": "React bindings for Redux with Relay in mind",
   "main": "./lib/index.js",
