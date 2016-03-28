@@ -51,7 +51,7 @@ test('createSmartComponent', t=>{
         ({context, options, SmartComponent})=>{
             const {query, initialVariables} = options;
             const tree = sd.shallowRender(
-                <SmartComponent {...context}/>
+                <SmartComponent/>, context
             );
             t.ok(context.adrenaline.performQuery.calledWith(context.store, query, initialVariables), "should set initialVariables in uncommitted state");
             t.equal(tree.getRenderOutput().type, LoadingComponent, "should render <Loading/> if the query has not been fetched");
@@ -66,7 +66,7 @@ test('createSmartComponent', t=>{
                 selectState: sinon.stub().resolves({ blah: 'blah' })
             });
             const resolved = sd.shallowRender(
-                <SmartComponent {...context} foo='foo' bar='bar' />
+                <SmartComponent foo='foo' bar='bar' />, context
             );
             setTimeout(()=>{ // setState is async
                 t.comment("- after resolving a query");
@@ -91,14 +91,14 @@ test('createSmartComponent', t=>{
             const props = {
                 call: 1
             };
-            const tree = sd.shallowRender(<SmartComponent {...context} {...props} />);
+            const tree = sd.shallowRender(<SmartComponent {...props} />, context);
 
             setTimeout(()=>{
                 t.comment("- using 'variables' as a pure function of props");
                 let adrenalineConnector = tree.getRenderOutput();
                 t.isEquivalent(adrenalineConnector.props.variables, {call:1}, "should set variables to the passed props");
                 props.call = 2;
-                tree.reRender(<SmartComponent {...context} {...props} />);
+                tree.reRender(<SmartComponent {...props} />, context);
                 setTimeout(()=>{
                     adrenalineConnector = tree.getRenderOutput();
                     t.isEquivalent(adrenalineConnector.props.variables, {call:2}, "should update variables when the props change");

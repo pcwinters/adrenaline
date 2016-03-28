@@ -22,12 +22,6 @@ export default function createSmartComponent(DecoratedComponent, specs) {
     static displayName = displayName
     static DecoratedComponent = DecoratedComponent
 
-    static propTypes = {
-      Loading: PropTypes.func,
-      adrenaline: createAdaptorShape(PropTypes),
-      store: createStoreShape(PropTypes)
-    }
-
     static contextTypes = {
       Loading: PropTypes.func,
       adrenaline: createAdaptorShape(PropTypes),
@@ -42,9 +36,12 @@ export default function createSmartComponent(DecoratedComponent, specs) {
 
     constructor(props, context) {
       super(props, context);
-      this.adrenaline = this.props.adrenaline || this.context.adrenaline;
-      this.store = this.props.store || this.context.store;
-      this.Loading = this.props.Loading || this.context.Loading;
+      this.adrenaline = this.context.adrenaline;
+      invariant(this.adrenaline, "Adrenaline must be provided via context");
+      this.store = this.context.store;
+      invariant(this.store, "Store must be provided via context");
+      this.Loading = this.context.Loading;
+      invariant(this.Loading, "Loading element must be provided via context");
 
       const initialVariables = specs.initialVariables || specs.variables || this.props;
       this.state = {
