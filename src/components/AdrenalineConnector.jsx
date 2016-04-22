@@ -3,7 +3,7 @@
 import React, { Component, PropTypes } from 'react/addons';
 import createStoreShape from '../store/createStoreShape';
 import createAdaptorShape from '../adaptor/createAdaptorShape';
-import shallowEqual from '../utils/shallowEqual';
+import {isEqual} from 'lodash';
 
 export default class AdrenalineConnector extends Component {
 
@@ -36,8 +36,8 @@ export default class AdrenalineConnector extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return !shallowEqual(this.state.slice, nextState.slice) ||
-           !shallowEqual(this.props, nextProps);
+    return !isEqual(this.state.slice, nextState.slice) ||
+           !isEqual(this.props, nextProps);
   }
 
   componentWillUnmount() {
@@ -46,7 +46,7 @@ export default class AdrenalineConnector extends Component {
 
   hasSliceChanged(props, slice, nextSlice) {
     const { adrenaline} = props;
-    return !shallowEqual((slice || {}).variables, (nextSlice || {}).variables) ||
+    return !isEqual((slice || {}).variables, (nextSlice || {}).variables) ||
         adrenaline.hasStateChanged((slice||{}).props, (nextSlice||{}).props);
   }
 

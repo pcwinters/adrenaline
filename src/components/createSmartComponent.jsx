@@ -2,9 +2,8 @@
 
 import React, { Component, PropTypes } from 'react/addons';
 import invariant from 'invariant';
-import { mapValues, reduce, isFunction, extend, isUndefined, clone } from 'lodash';
+import { mapValues, reduce, isFunction, extend, isUndefined, clone, isEqual } from 'lodash';
 import AdrenalineConnector from './AdrenalineConnector';
-import shallowEqual from '../utils/shallowEqual';
 import getDisplayName from '../utils/getDisplayName';
 import createAdaptorShape from '../adaptor/createAdaptorShape';
 import createStoreShape from '../store/createStoreShape';
@@ -59,18 +58,18 @@ export default function createSmartComponent(DecoratedComponent, specs) {
     }
 
     setVariables(nextVariables){
-      const uncommittedVariables = extend(this.state.uncommittedVariables, nextVariables);
-      this.setState({ uncommittedVariables: clone(uncommittedVariables) }, () => this.fetch());
+      const uncommittedVariables = clone(extend(this.state.uncommittedVariables, nextVariables));
+      this.setState({ uncommittedVariables: uncommittedVariables }, () => this.fetch(uncommittedVariables));
     }
 
     componentWillMount(){
-        this.fetch();
+        this.fetch(this.state.uncommittedVariables);
     }
 
     componentWillReceiveProps(nextProps) {
         if(isFunction(specs.variables)
             && nextProps != this.props
-            && !shallowEqual(nextProps, this.props)){
+            && !isEqual(nextProps, this.props)){
             this.setVariables(specs.variables(nextProps))
         }
     }
@@ -79,27 +78,36 @@ export default function createSmartComponent(DecoratedComponent, specs) {
       return !shadowEqualScalar(this.props, nextProps);
     }*/
 
-    fetch() {
-      const variables = this.state.uncommittedVariables;
+    fetch(uncommittedVariables) {
       const { adrenaline, store } = this;
       const { query } = specs;
 
-      adrenaline.performQuery(store, query, variables)
-        .then(({query, variables})=>{
-          // commit the newly loaded variables
-          this.setState({ variables: clone(variables) || null });
+      adrenaline.performQuery(store, query, uncommittedVariables)
+        .then(()=>{
+          this.setState({ variables: clone(uncommittedVariables) || null });
         })
-        .catch(({query, variables})=>{
-          console.error('Query failed with variables', query, variables);
+        .catch((err)=>{
+          console.error('Query failed', {
+            variables: uncommittedVariables,
+            query: query(uncommittedVariables)
+          }, err);
+          return Promise.reject(err);
         });
     }
 
-    renderDecoratedComponent({variables, props}){
+    renderDecoratedComponent({variables, props}) {
       return (
         <DecoratedComponent {...this.props} {...props}
-          adrenaline={extend({}, this.state, {variables, slice: props})}
+          adrenaline={extend({},
+              this.state,
+              {
+                  variables,
+                  slice: props,
+                  query: specs.query(variables)
+              }
+          )}
           mutations={this.mutations} />
-      )
+      );
     }
 
     render() {
