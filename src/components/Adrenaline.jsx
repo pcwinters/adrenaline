@@ -8,7 +8,7 @@ import createStoreShape from '../store/createStoreShape';
 import createAdaptorShape from '../adaptor/createAdaptorShape';
 import { UPDATE_CACHE } from '../constants';
 import invariant from 'invariant';
-import { isUndefined } from 'lodash';
+import { isUndefined, isFunction } from 'lodash';
 
 const adaptorShape = createAdaptorShape(PropTypes);
 
@@ -26,7 +26,10 @@ export default class Adrenaline extends Component {
 
   static propTypes = {
     renderLoading: PropTypes.func,
-    children: PropTypes.func.isRequired,
+    children: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.node
+    ]).isRequired,
     endpoint: PropTypes.string,
     schema: PropTypes.object,
     adaptor: function(props, propName, componentName) {
@@ -80,6 +83,6 @@ export default class Adrenaline extends Component {
 
   render() {
     const { children } = this.props;
-    return children();
+    return isFunction(children) ? children() : children;
   }
 }
